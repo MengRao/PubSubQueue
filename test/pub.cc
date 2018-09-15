@@ -25,6 +25,7 @@ void sendMsg(int& val) {
 
 
 int main(int argc, const char** argv) {
+    // cpupin(2);
     if(argc < 2) {
         cout << "usage: " << argv[0] << " TOPIC" << endl;
         exit(1);

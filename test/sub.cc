@@ -9,7 +9,7 @@ template<class T>
 void handleMsg(MsgQ::MsgHeader* header, const char* topic, uint64_t now) {
     T* msg = (T*)(header + 1);
     auto latency = now - msg->ts;
-    cout << "topic: " << topic << " tid: " << msg->tid << " latency: " << (now - msg->ts) << " val:";
+    cout << "topic: " << topic << " pubtid: " << msg->tid << " latency: " << (now - msg->ts) << " val:";
     for(auto v : msg->val) {
         cout << " " << v;
     }
@@ -17,7 +17,7 @@ void handleMsg(MsgQ::MsgHeader* header, const char* topic, uint64_t now) {
 }
 
 int main(int argc, const char** argv) {
-    // cpupin(1);
+    // cpupin(3);
     if(argc < 2) {
         cout << "usage: " << argv[0] << " TOPIC1 [TOPIC2]..." << endl;
         exit(1);
