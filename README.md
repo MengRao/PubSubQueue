@@ -40,7 +40,7 @@ while(true) {
 For more examples, see [test](https://github.com/MengRao/IPC_PubSub/tree/master/test).
 
 ## Key msg
-One useful feature PubSubQueue supports is "key msg"(it's like key frame in audio/video stream), where publisher can mark the msg it publishes as key msg, and the queue will save the index of the latest key msg so any newly joined subscribers can start reading from this message.
+One useful feature PubSubQueue supports is "key msg"(it's like key frame in audio/video stream), where publisher can mark the msg it publishes as key msg, and the queue will save the index of the last key msg so any newly joined subscribers can start reading from this message.
 
 Last value caching ([LVC](https://www.safaribooksonline.com/library/view/zeromq/9781449334437/ch05s03.html)) can be easily implemented by marking every msg to key msg.
 
