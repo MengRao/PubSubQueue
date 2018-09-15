@@ -26,12 +26,15 @@ Usage for Subscriber:
 
 char buf[100];
 auto idx = q.sub();
-auto res = q.read(idx, buf, sizeof(buf));
-if(res == MsgQ::ReadOK) {
-  MsgQ::MsgHeader* header = (MsgQ::MsgHeader*)buf;
-  assert(header->size == sizeof(int));
-  int msg = *(int*)(header + 1);
-  // handle msg...
+while(true) {
+  auto res = q.read(idx, buf, sizeof(buf));
+  if(res == MsgQ::ReadOK) {
+    MsgQ::MsgHeader* header = (MsgQ::MsgHeader*)buf;
+    assert(header->size == sizeof(int));
+    int msg = *(int*)(header + 1);
+    // handle msg...
+  }
+  // handle other res...
 }
 ```
 For more examples, see [test](https://github.com/MengRao/IPC_PubSub/tree/master/test).
