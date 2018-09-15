@@ -2,7 +2,7 @@
 
 // PubSubQueue is a single publisher(source) multiple subscriber(receiver) message queue.
 // Publisher is not affected(e.g. blocked) by or even aware of subscribers.
-// Subscriber is purely a reader, if it's not reading fast enough and falls far behind the publisher it'll lose message.
+// Subscriber is a pure reader, if it's not reading fast enough and falls far behind the publisher it'll lose message.
 // PubSubQueue can be zero initialized without calling constructor, which facilitates allocating in shared memory
 // It is also "crash safe" which means crash of either publisher or subscribers will not corrupt the queue
 
@@ -17,7 +17,6 @@ public:
         uint32_t size;
         // userdata is used by user, e.g. save the msg_type
         // we assume user msg is 8 types aligned so there should be 4 bytes padding anyway if we don't define userdata
-        // userdata
         uint32_t userdata;
     };
 
