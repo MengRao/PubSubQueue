@@ -1,7 +1,10 @@
 #pragma once
 
-// PubSubQueue can be zero initialized without calling constructor, which facilitates being allocated in shared memory
-// it is also "crash safe" which means crash of either publisher or subscribers will not corrupt the queue
+// PubSubQueue is a single publisher(source) multiple subscriber(receiver) message queue.
+// Publisher is not affected(e.g. blocked) by or even aware of subscribers.
+// Subscriber is purely a reader, if it's not reading fast enough and falls far behind the publisher it'll lose message.
+// PubSubQueue can be zero initialized without calling constructor, which facilitates allocating in shared memory
+// It is also "crash safe" which means crash of either publisher or subscribers will not corrupt the queue
 
 // Bytes should be at least twice the size of the largest msg, otherwise alloc() could return nullptr
 template<uint32_t Bytes>
@@ -12,11 +15,14 @@ public:
     {
         // size of this msg, including header itself
         uint32_t size;
-        // userdata is used by user, such as saving msg_type
-        // we assume that user msg is 8 types aligned so there'll be 4 bytes padding anyway if we don't define userdata
+        // userdata is used by user, e.g. save the msg_type
+        // we assume user msg is 8 types aligned so there should be 4 bytes padding anyway if we don't define userdata
+        // userdata
         uint32_t userdata;
     };
 
+    // allocate enough space(after the returned MsgHeader) to save the message to publish
+    // return nullptr if size is too large
     MsgHeader* alloc(uint32_t size) {
         size += sizeof(MsgHeader);
         uint32_t blk_sz = toBlk(size);
@@ -38,16 +44,21 @@ public:
         return &header;
     }
 
+    // publish the message allocated by alloc()
+    // mark it as a key message so newly joined subscribers can start reading from this message
     void pub(bool key = false) {
         asm volatile("" : : "m"(blk), "m"(written_idx) :);
         uint32_t blk_sz = toBlk(blk[written_idx % BLK_CNT].header.size);
         if(key) last_key_idx = written_idx + 1; // +1 to allow last_key_idx to be zero initialized
-        // it's OK that last_key_idx got changed and process crashed/hang before written_idx can be updated
+        // it's OK that last_key_idx got changed and then process crashed/hang before written_idx can be updated
         // in this case sub(true) is effective sub(false), no big deal
         written_idx += blk_sz;
         asm volatile("" : : "m"(written_idx), "m"(last_key_idx) :);
     }
 
+    // Newly joined subscriber calls sub() to get a message index to start reading at
+    // set key to true if wanting to start from the last key message if any
+    // or get the next message index the subscriber is going to write(can't read it immediately)
     uint64_t sub(bool key = false) {
         asm volatile("" : "=m"(last_key_idx), "=m"(writing_idx) : :); // force read memory
         if(key && last_key_idx > 0 && last_key_idx + BLK_CNT > writing_idx)
@@ -64,10 +75,15 @@ public:
         ReadNeedReSub
     };
 
+    // subscriber provides a message index to read at and a buffer to copy message(including MsgHeader) to
+    // return ReadOK: successfully read a message and set idx to the next message
+    // return ReadAgain: no message to read now, user should try again later
+    // return ReadBuffTooShort: bufsize is too small to hold the message and MsgHeader is copied in the buffer to check
+    // return ReadNeedReSub: idx is obsolete and the message is lost, user has to subscribe again to get a new index
     ReadRes read(uint64_t& __restrict__ idx, void* __restrict__ buf, uint32_t bufsize) {
         asm volatile("" : "=m"(written_idx), "=m"(blk) : :); // force read memory
         if(idx >= written_idx) return ReadAgain;
-        // size may be overridden/corrupted by the publisher, we'll check it later...
+        // size may have been overridden/corrupted by the publisher, we'll check it later...
         uint32_t size = blk[idx % BLK_CNT].header.size;
         uint32_t padding_sz = BLK_CNT - (idx % BLK_CNT);
         if(size == 0) { // rewind
