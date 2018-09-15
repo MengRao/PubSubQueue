@@ -5,7 +5,7 @@ It's a simple C++ class suitable for residing in shared memory for IPC, represen
 
 It supports single publisher(source) and multiple subscriber(receiver), where publisher is not affected(e.g. blocked) by or even aware of subscribers. Subscriber is a pure reader of the queue, if it's not reading fast enough and falls far behind the publisher it'll lose messages.
 
-Message type in PubSubQueue is a blob and is guranteed to be 8 bytes aligned, so a C/C++ struct can simply be used without performance penalty.
+Msg type in PubSubQueue is blob and msg is guaranteed to be allocated in 8 bytes aligned address by queue, so a C/C++ struct can simply be used without performance penalty.
 
 ## Example
 Usage for publisher:
