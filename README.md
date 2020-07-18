@@ -53,3 +53,7 @@ The latency of transmitting a msg from publisher to subscriber is stably lower t
 There are two solutions:
  * Use multiple topics(thus multiple queues) and have subscribers subscribe for all these topics.
  * Add a [multiple producer single consumer queue](https://github.com/MengRao/MPSC_Queue) and have a dedicated worker consume and publish msgs.
+ 
+## An Implementation for Fixed-Sized Msg
+If you are using fixed sized msgs, then take a look at [SPMC_Queue](https://github.com/MengRao/SPMC_Queue) as it's more effient and easy to use.
+
